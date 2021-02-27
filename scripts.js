@@ -29,7 +29,25 @@ Tree.prototype.BFS = function() {
     var currentNode = this.root;
     var queue = new Queue();
     while(currentNode) {
-        console.log(currentNode.data);
+
+        /* Don´t fucking uncomment dis block
+        Unless you want your pc to explode
+        console.log(currentNode.data); */
+
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                if (currentNode.data[x][y] === null) {
+                    const len = currentNode.data.length, child = new Array(len);
+                    for(let i = 0; i < len; i++) 
+                        child[i] = currentNode.data[i].slice(0);
+                    child[x][y] = 0;
+                    const node = new Node(child);
+                    node.parent = currentNode;
+                    currentNode.children.push(node);
+                }
+            }
+        }
+
         for(let i = 0; i < currentNode.children.length; i++)
             queue.enqueue(currentNode.children[i]);
         currentNode = queue.dequeue();
@@ -144,40 +162,6 @@ function addPlayingPiece(mouse) {
 }
 
 function fillThatTree(tree) {
-  const root = tree.root;
-  for (let x = 0; x < 3; x++) {
-    for (let y = 0; y < 3; y++) {
-      if (root.data[x][y] === null) {
-        const len = root.data.length,
-          child = new Array(len);
-        for (let i = 0; i < len; i++) child[i] = root.data[i].slice(0);
-        child[x][y] = 0;
-        const node = new Node(child);
-        node.parent = root;
-        root.children.push(node);
-      }
-    }
-  }
-
-  root.children.forEach((child) => {
-
-    const _root = child;
-
-    for (let x = 0; x < 3; x++) {
-      for (let y = 0; y < 3; y++) {
-        if (_root.data[x][y] === null) {
-
-          const _len = root.data.length,  _child = new Array(_len);
-          for (let i = 0; i < _len; i++) _child[i] = _root.data[i].slice(0);
-
-          _child[x][y] = 0;
-          const _node = new Node(_child);
-          _node.parent = _root;
-          _root.children.push(_node);
-        }
-      }
-    }
-  });
   tree.BFS();
 }
 
