@@ -10,6 +10,20 @@ canvas.width = canvasSize;
 canvas.height = canvasSize;
 context.translate(0.5, 0.5);
 
+let board;
+
+var asdfgh;
+
+function getInitialBoard(defaultValue) {
+  board = [];
+  for (var x = 0; x < 3; x++) {
+    board.push([]);
+    for (var y = 0; y < 3; y++) board[x].push(defaultValue);
+  }
+  return board;
+}
+
+
 class Node {
   constructor(data) {
     this.data = data;
@@ -25,67 +39,77 @@ class Tree {
   }
 }
 
-Tree.prototype.BFS = function() {
-    var currentNode = this.root;
-    var queue = new Queue();
-    while(currentNode) {
+Tree.prototype.BFS = function () {
+  var winnings = [];
+  var currentNode = this.root;
+  var queue = new Queue();
+  while (currentNode) {
 
-        /* Don´t fucking uncomment dis block
+    /* Don´t fucking uncomment dis block
         Unless you want your pc to explode
         console.log(currentNode.data); */
 
-        for (let x = 0; x < 3; x++) {
-            for (let y = 0; y < 3; y++) {
-                if (currentNode.data[x][y] === null) {
-                    const len = currentNode.data.length, child = new Array(len);
-                    for(let i = 0; i < len; i++) 
-                        child[i] = currentNode.data[i].slice(0);
-                    child[x][y] = 0;
-                    const node = new Node(child);
-                    node.parent = currentNode;
-                    currentNode.children.push(node);
-                }
-            }
+    for (let x = 0; x < 3; x++) {
+      for (let y = 0; y < 3; y++) {
+        if (currentNode.data[x][y] === null) {
+          const len = currentNode.data.length,
+            child = new Array(len);
+          for (let i = 0; i < len; i++) child[i] = currentNode.data[i].slice(0);
+          child[x][y] = 0;
+          const node = new Node(child);
+          node.parent = currentNode;
+          currentNode.children.push(node);
         }
-
-        for(let i = 0; i < currentNode.children.length; i++)
-            queue.enqueue(currentNode.children[i]);
-        currentNode = queue.dequeue();
+      }
     }
-}
+
+    for (let i = 0; i < currentNode.children.length; i++)
+      queue.enqueue(currentNode.children[i]);
+    currentNode = queue.dequeue();
+    let option = currentNode;
+    if (option) while (option.parent.parent !== null) option = option.parent;
+    verifyNode(currentNode)
+      ? winnings.indexOf(option) == -1
+        ? winnings.push(option)
+        : console.log()
+      : console.log();
+  }
+  return winnings[Math.floor(Math.random() * winnings.length)];
+};
 
 class Queue {
-    constructor() {
-        this.oldestIndex = 1;
-        this.newestIndex = 1;
-        this.storage = {};
+  constructor() {
+    this.oldestIndex = 1;
+    this.newestIndex = 1;
+    this.storage = {};
+  }
+  enqueue(data) {
+    this.storage[this.newestIndex] = data;
+    this.newestIndex++;
+  }
+  dequeue() {
+    var deletedData;
+    if (this.oldestIndex != this.newestIndex) {
+      deletedData = this.storage[this.oldestIndex];
+      delete this.storage[this.oldestIndex];
+      this.oldestIndex++;
+      return deletedData;
     }
-    enqueue(data) {
-        this.storage[this.newestIndex] = data;
-        this.newestIndex++;
+  }
+  printQ() {
+    var size = this.size();
+    for (var i = this.oldestIndex; i < this.newestIndex; i++) {
+      console.log(this.storage[i]);
     }
-    dequeue() {
-        var deletedData;
-        if (this.oldestIndex != this.newestIndex) {
-            deletedData = this.storage[this.oldestIndex];
-            delete this.storage[this.oldestIndex];
-            this.oldestIndex++;
-            return deletedData;
-        }
-    }
-    printQ() {
-        var size = this.size();
-        for (var i = this.oldestIndex; i < this.newestIndex; i++) {
-            console.log(this.storage[i]);
-        }
-        return size;
-    }
-    size() {
-        return this.newestIndex - this.oldestIndex;
-    }
+    return size;
+  }
+  size() {
+    return this.newestIndex - this.oldestIndex;
+  }
 }
 
-window.onload = function () {
+function init() {
+  board = getInitialBoard(null);
   Swal.fire({
     icon: "info",
     title: "Who´s going to start?",
@@ -96,29 +120,78 @@ window.onload = function () {
     /* Read more about isConfirmed, isDenied below */
     if (result.isConfirmed) {
       player = 2;
+      player2();
     } else if (result.isDenied) {
       player = 1;
     }
   });
-};
 
-function getInitialBoard(defaultValue) {
-  board = [];
-
-  for (var x = 0; x < 3; x++) {
-    board.push([]);
-
-    for (var y = 0; y < 3; y++) {
-      board[x].push(defaultValue);
-    }
-  }
-
-  return board;
 }
 
-var board = getInitialBoard(null);
+window.onload = function () {
+  init();
+};
 
-function addPlayingPiece(mouse) {
+function verifyNode(node) {
+  if (node) {
+    let diagonal = true,
+      inv_diagonal = true;
+    //Check columns, rows, and diagonals
+    for (var x = 0; x < node.data.length; x++) {
+      let row = true;
+      for (var y = 0; y < node.data.length; y++) {
+        if (x === y) if (node.data[x][y] !== 0) diagonal = false;
+        if (x + y === 2) if (node.data[x][y] !== 0) inv_diagonal = false;
+        if (node.data[x][y] !== 0) row = false;
+      }
+      if (row) return node;
+    }
+    if (diagonal || inv_diagonal) return node;
+  }
+  return false;
+}
+
+function player2() {
+  let xCoordinate, yCoordinate;
+
+  console.log(board);
+  var len = board.length,
+    child = new Array(len);
+  for (var i = 0; i < len; i++) child[i] = board[i].slice(0);
+  var tree = new Tree(child);
+
+  const path = tree.BFS();
+
+  if(path){
+    for (let x = 0; x < len; x++) {
+      for (let y = 0; y < len; y++) {
+        if (path.data[x][y] !== board[x][y]) {
+          xCoordinate = y * 166.66666666;
+          yCoordinate = x * 166.66666666;
+        }
+      }
+    }
+  } else {
+    Swal.fire({
+      icon: "info",
+      title: "It´s a tie!",
+      text: 'Another try?',
+      showDenyButton: true,
+      confirmButtonText: "Sure",
+      denyButtonText: "Nope",
+    }).then((result) => {
+      /* Read more about isConfirmed, isDenied below */
+      if (result.isConfirmed) {
+        location.reload();
+      }
+    });
+  }
+
+  drawO(xCoordinate, yCoordinate);
+  player = 1;
+}
+
+function player1(mouse) {
   var xCoordinate;
   var yCoordinate;
 
@@ -133,36 +206,44 @@ function addPlayingPiece(mouse) {
         mouse.y >= yCoordinate &&
         mouse.y <= yCoordinate + sectionSize
       ) {
-        // clearPlayingArea(xCoordinate, yCoordinate);
-
         if (
           board[(yCoordinate / 166).toFixed(0)][
             (xCoordinate / 166).toFixed(0)
           ] === null
-        ) {
-          if (player === 1) {
-            drawX(xCoordinate, yCoordinate);
-          } else {
-            var len = board.length,
-              child = new Array(len);
-            for (var i = 0; i < len; i++) child[i] = board[i].slice(0);
-            var tree = new Tree(child);
-            fillThatTree(tree);
-            drawO(xCoordinate, yCoordinate);
-          }
-
-          if (player === 1) player = 2;
-          else player = 1;
-
-          console.log(tree);
-        }
+        )
+          drawX(xCoordinate, yCoordinate);
       }
     }
   }
+  player = 2;
 }
 
-function fillThatTree(tree) {
-  tree.BFS();
+function addPlayingPiece(mouse) {
+  console.log(player);
+  player1(mouse);
+  console.log(won(1));
+  if (won){
+    
+  }
+  player2();
+  console.log(won(0));
+}
+
+function won(_player) {
+  let diagonal = true,
+  inv_diagonal = true;
+  //Check columns, rows, and diagonals
+  for (var x = 0; x < board.length; x++) {
+    let row = true;
+    for (var y = 0; y < board.length; y++) {
+      if (x === y) if (board[y][x] !== _player) diagonal = false;
+      if (x + y === 2) if (board[y][x] !== _player) inv_diagonal = false;
+      if (board[y][x] !== _player) row = false;
+    }
+    if (row) return true;
+  }
+  if (diagonal || inv_diagonal) return true;
+  return false;
 }
 
 function clearPlayingArea(xCoordinate, yCoordinate) {
