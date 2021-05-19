@@ -138,13 +138,14 @@ function verifyNode(node) {
       inv_diagonal = true;
     //Check columns, rows, and diagonals
     for (var x = 0; x < node.data.length; x++) {
-      let row = true;
+      let row = true, column = true;
       for (var y = 0; y < node.data.length; y++) {
         if (x === y) if (node.data[x][y] !== 0) diagonal = false;
         if (x + y === 2) if (node.data[x][y] !== 0) inv_diagonal = false;
         if (node.data[x][y] !== 0) row = false;
+        if (node.data[y][x] !== 0) column = false;
       }
-      if (row) return node;
+      if (row || column) return node;
     }
     if (diagonal || inv_diagonal) return node;
   }
@@ -154,7 +155,6 @@ function verifyNode(node) {
 function player2() {
   let xCoordinate, yCoordinate;
 
-  console.log(board);
   var len = board.length,
     child = new Array(len);
   for (var i = 0; i < len; i++) child[i] = board[i].slice(0);
@@ -171,20 +171,6 @@ function player2() {
         }
       }
     }
-  } else {
-    Swal.fire({
-      icon: "info",
-      title: "It´s a tie!",
-      text: 'Another try?',
-      showDenyButton: true,
-      confirmButtonText: "Sure",
-      denyButtonText: "Nope",
-    }).then((result) => {
-      /* Read more about isConfirmed, isDenied below */
-      if (result.isConfirmed) {
-        location.reload();
-      }
-    });
   }
 
   drawO(xCoordinate, yCoordinate);
@@ -219,14 +205,39 @@ function player1(mouse) {
 }
 
 function addPlayingPiece(mouse) {
-  console.log(player);
   player1(mouse);
-  console.log(won(1));
-  if (won){
-    
+  if (!won(1)) player2();
+  else {
+    Swal.fire({
+      icon: "info",
+      title: "You´ve won!",
+      text: 'Another try?',
+      showDenyButton: true,
+      confirmButtonText: "Sure",
+      denyButtonText: "Nope",
+    }).then((result) => {
+      /* Read more about isConfirmed, isDenied below */
+      if (result.isConfirmed) {
+        location.reload();
+      }
+    });
   }
-  player2();
-  console.log(won(0));
+  if (won(0)) {
+    Swal.fire({
+      icon: "info",
+      title: "I´ve won!",
+      text: 'Another try?',
+      showDenyButton: true,
+      confirmButtonText: "Sure",
+      denyButtonText: "Nope",
+    }).then((result) => {
+      /* Read more about isConfirmed, isDenied below */
+      if (result.isConfirmed) {
+        location.reload();
+      }
+    });
+
+  }
 }
 
 function won(_player) {
@@ -234,13 +245,14 @@ function won(_player) {
   inv_diagonal = true;
   //Check columns, rows, and diagonals
   for (var x = 0; x < board.length; x++) {
-    let row = true;
+    let row = true, column = true;
     for (var y = 0; y < board.length; y++) {
-      if (x === y) if (board[y][x] !== _player) diagonal = false;
-      if (x + y === 2) if (board[y][x] !== _player) inv_diagonal = false;
-      if (board[y][x] !== _player) row = false;
+      if (x === y) if (board[x][y] !== _player) diagonal = false;
+      if (x + y === 2) if (board[x][y] !== _player) inv_diagonal = false;
+      if (board[x][y] !== _player) row = false;
+      if (board[y][x] !== _player) column = false;
     }
-    if (row) return true;
+    if (row || column) return true;
   }
   if (diagonal || inv_diagonal) return true;
   return false;
